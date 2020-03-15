@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Point;
 import utm.ptm.mtransportserver.models.db.Node;
 
 import java.io.Serializable;
@@ -14,12 +16,10 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class NodeDTO {
     private Long id;
-    private double lat;
-    private double lng;
+    private Point point;
 
     public NodeDTO(Node node) {
         id = node.getId();
-        lat = node.getLat();
-        lng = node.getLng();
+        point = node.getPoint();
     }
 }

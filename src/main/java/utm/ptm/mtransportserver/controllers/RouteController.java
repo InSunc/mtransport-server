@@ -1,17 +1,16 @@
 package utm.ptm.mtransportserver.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import utm.ptm.mtransportserver.models.db.RouteNode;
-import utm.ptm.mtransportserver.models.dto.RouteNodeDTO;
-import utm.ptm.mtransportserver.repositories.RouteNodesRepository;
-import utm.ptm.mtransportserver.services.RouteNodeService;
+import utm.ptm.mtransportserver.models.dto.RouteWayDTO;
+import utm.ptm.mtransportserver.repositories.RouteWayRepository;
+import utm.ptm.mtransportserver.services.RouteWayService;
+import utm.ptm.mtransportserver.utils.OverpassDataParser;
 
-import java.awt.*;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 @CrossOrigin(origins = "*")
@@ -19,15 +18,23 @@ import java.util.List;
 @RequestMapping("/routes")
 public class RouteController {
     @Autowired
-    RouteNodesRepository routeNodesRepository;
+    RouteWayRepository routeWayRepository;
 
     @Autowired
-    private RouteNodeService routeNodeService;
+    private RouteWayService routeWayService;
+
+    @Autowired
+    private OverpassDataParser overpassDataParser;
 
     @GetMapping
-    public List<RouteNodeDTO> getRoutes() {
-        List<RouteNodeDTO> path = routeNodeService.getAll();
-
-        return path;
+    public String getRoutes() {
+        try {
+            overpassDataParser.getRouteWaysFromJson("t2","t2/t2-ways.json");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+//        List<RouteWayDTO> path = routeWayService.getAll();
+//
+        return "Success";
     }
 }

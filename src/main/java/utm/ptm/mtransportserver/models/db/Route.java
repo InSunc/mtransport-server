@@ -15,8 +15,12 @@ public class Route {
     @Id
     @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
     @Column
-    String name;
+    private String name;
+
+    public Route(String name) {
+        this.name = name;
+    }
 }

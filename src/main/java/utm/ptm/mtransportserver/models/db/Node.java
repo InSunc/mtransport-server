@@ -1,8 +1,12 @@
 package utm.ptm.mtransportserver.models.db;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import lombok.*;
 import net.minidev.json.annotate.JsonIgnore;
+import org.hibernate.annotations.Type;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Point;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -17,14 +21,11 @@ import java.io.Serializable;
 public class Node implements Serializable {
     @Id
     @Column
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
-    private double lat;
+    @Column(columnDefinition = "geometry")
+    private Point point;
 
-    @Column
-    private double lng;
 
     @JsonIgnore
     @OneToOne(mappedBy = "routeNode", targetEntity = Stop.class)
@@ -34,16 +35,16 @@ public class Node implements Serializable {
     @OneToOne(mappedBy = "stopNode", targetEntity = Stop.class)
     private Stop stopNode;
 
-    public Node(double lat, double lng) {
-        this.lat = lat;
-        this.lng = lng;
+    public Node(long id, Point point) {
+        this.id = id;
+        this.point = point;
     }
 
     @Override
     public int hashCode() {
         int hash = super.hashCode();
 
-        hash += lat + lng;
+        hash += point.hashCode();
 
         return hash;
     }
@@ -59,7 +60,7 @@ public class Node implements Serializable {
         }
 
         Node node = (Node) obj;
-        if (this.lat == node.lat && this.lng == node.lng) {
+        if (this.point.equals(node.getPoint())) {
             return true;
         }
 

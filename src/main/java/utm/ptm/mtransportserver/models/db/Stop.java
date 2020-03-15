@@ -12,9 +12,9 @@ import java.io.Serializable;
 public class Stop implements Serializable {
     /*
      *
-     * Relations: Two 1-1 relations to unify a node that's on the route with a node that represents the stop
+     * Relations: Two 1-1 relations to unify a node that's on the way with a node that represents the stop
      *
-     * Node(1, x, y) -> node on the route
+     * Node(1, x, y) -> node on the way
      * Node(2, a, b) -> node that represents transport stop
      * Stop(1, "stop name", 2)
      */

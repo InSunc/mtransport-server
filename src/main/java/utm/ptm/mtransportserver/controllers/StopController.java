@@ -13,12 +13,10 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/stops")
 public class StopController {
-    @Autowired
-    private OverpassDataParser overpassDataParser;
+
 
     @GetMapping
     public void getStops() throws IOException {
-//        overpassDataParser.getStopsFromJson("bus_stops.json");
-        overpassDataParser.getRouteFromJson("t2-route.geojson");
+
     }
 }
