@@ -33,8 +33,7 @@ public class RouteController {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-//        List<RouteWayDTO> path = routeWayService.getAll();
-//
+
         return "Success";
     }
 }

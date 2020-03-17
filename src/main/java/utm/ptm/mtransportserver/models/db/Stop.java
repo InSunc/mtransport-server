@@ -2,6 +2,7 @@ package utm.ptm.mtransportserver.models.db;
 
 
 import lombok.Data;
+import org.hibernate.annotations.Cascade;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -31,7 +32,7 @@ public class Stop implements Serializable {
     @Column(name = "name")
     private String name;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     @JoinColumn(name = "route_node_id", referencedColumnName = "id")
     private Node routeNode;
 

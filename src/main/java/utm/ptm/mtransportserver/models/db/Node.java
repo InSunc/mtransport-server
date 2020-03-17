@@ -1,10 +1,8 @@
 package utm.ptm.mtransportserver.models.db;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import lombok.*;
 import net.minidev.json.annotate.JsonIgnore;
-import org.hibernate.annotations.Type;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Point;
 
@@ -24,7 +22,7 @@ public class Node implements Serializable {
     private Long id;
 
     @Column(columnDefinition = "geometry")
-    private Point point;
+    private Point location;
 
 
     @JsonIgnore
@@ -35,16 +33,16 @@ public class Node implements Serializable {
     @OneToOne(mappedBy = "stopNode", targetEntity = Stop.class)
     private Stop stopNode;
 
-    public Node(long id, Point point) {
+    public Node(long id, Point location) {
         this.id = id;
-        this.point = point;
+        this.location = location;
     }
 
     @Override
     public int hashCode() {
         int hash = super.hashCode();
 
-        hash += point.hashCode();
+        hash += location.hashCode();
 
         return hash;
     }
@@ -60,7 +58,7 @@ public class Node implements Serializable {
         }
 
         Node node = (Node) obj;
-        if (this.point.equals(node.getPoint())) {
+        if (this.location.equals(node.location)) {
             return true;
         }
 

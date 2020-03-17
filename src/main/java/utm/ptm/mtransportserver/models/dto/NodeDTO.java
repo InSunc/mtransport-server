@@ -20,6 +20,6 @@ public class NodeDTO {
 
     public NodeDTO(Node node) {
         id = node.getId();
-        point = node.getPoint();
+        point = node.getLocation();
     }
 }
