@@ -8,7 +8,8 @@ import utm.ptm.mtransportserver.models.db.Node;
 @Repository
 public interface NodeRepository extends JpaRepository<Node, Long> {
     @Query(value = "SELECT * FROM nodes\n" +
-            " ORDER BY location <-> st_setsrid(st_makepoint(?1, ?2), 0)\n" +
-            " LIMIT 1;\n", nativeQuery = true)
+                    " ORDER BY location <-> st_setsrid(st_makepoint(?1, ?2), 0)\n" +
+                    " LIMIT 1;\n",
+            nativeQuery = true)
     public Node findNearest(double lat, double lon);
 }

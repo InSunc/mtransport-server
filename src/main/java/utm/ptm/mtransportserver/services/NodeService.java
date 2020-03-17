@@ -13,7 +13,7 @@ public class NodeService {
     @Autowired
     private NodeRepository nodeRepository;
 
-    public Iterable<Node> saveAll(Iterable<Node> nodes) {
+    public List<Node> saveAll(Iterable<Node> nodes) {
         return nodeRepository.saveAll(nodes);
     }
 

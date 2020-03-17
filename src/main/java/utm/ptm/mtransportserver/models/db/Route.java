@@ -14,13 +14,12 @@ import javax.persistence.*;
 public class Route {
     @Id
     @Column
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @Column
     private String name;
 
-    public Route(String name) {
-        this.name = name;
+    public Route(String id) {
+        this.id = id;
     }
 }

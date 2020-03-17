@@ -13,7 +13,12 @@ public class StopService {
     @Autowired
     private StopRepository stopRepository;
 
-    public Iterable<Stop> saveAll(List<Stop> stops) {
+    public Stop save(Stop stop) {
+        return stopRepository.save(stop);
+    }
+
+// TODO: check if it makes sense
+    public List<Stop> saveAll(List<Stop> stops) {
         List<Long> stopIds = new ArrayList<>();
         stops.forEach(x -> stopIds.add(x.getStopNode().getId()));
 

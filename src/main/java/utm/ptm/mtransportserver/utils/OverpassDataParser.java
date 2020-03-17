@@ -37,10 +37,16 @@ public class OverpassDataParser {
     private StopService stopService;
 
     @Autowired
+    private StopRepository stopRepository;
+
+    @Autowired
     private WayRepository wayRepository;
 
     @Autowired
     private WayNodeRepository wayNodeRepository;
+
+    @Autowired
+    private RouteStopRepository routeStopRepository;
 
     /*
         Result of overpass-turbo query:
@@ -49,39 +55,41 @@ public class OverpassDataParser {
             node(r);
             out geom;
      */
-    public void getStopsFromJson(String route, String filename) throws IOException {
-        File file = ResourceUtils.getFile("classpath:routes/" + filename);
+    public void getRouteStopsFromJson(String routeName, String filename) throws IOException {
+        File file = new File(filename);
 
         Gson gson = new Gson();
         JsonReader jsonReader = new JsonReader(new FileReader(file));
         OverpassResultDTO result = gson.fromJson(jsonReader, OverpassResultDTO.class);
 
-        List<Stop> platformNodes = new ArrayList<>();
-        List<Node> positionNodes = new ArrayList<>();
+        Route route = routeRepository.save(new Route(routeName));
+        List<RouteStop> routeStops = new ArrayList<>();
+        List<Stop> stops = new ArrayList<>();
 
         for (ElementDTO element : result.elements) {
             GeometryFactory geometryFactory = new GeometryFactory();
             Point point = geometryFactory.createPoint(new Coordinate(element.lon, element.lat));
-            Node node = new Node(element.id, point);
+            Node node = nodeService.save(new Node(element.id, point));
 
-            if (element.tags.public_transport.equals("stop_position")) {
-                positionNodes.add(node);
-            } else if (element.tags.public_transport.equals("platform")) {
+            if (element.tags.public_transport.equals("platform")) {
                 Stop stop = new Stop();
                 stop.setName(element.tags.getName());
                 stop.setStopNode(node);
-                platformNodes.add(stop);
+                stops.add(stop);
             }
         }
 
-        nodeService.saveAll(positionNodes);
-
-        for (Stop platformNode : platformNodes) {
-            Node nearestNode = nodeService.findNearest(platformNode.getStopNode());
-            platformNode.setRouteNode(nearestNode);
+        for (Stop stop : stops) {
+            Node nearestNode = nodeService.findNearest(stop.getStopNode());
+            stop.setRouteNode(nearestNode);
+            stop = stopService.save(stop);
         }
 
-        stopService.saveAll(platformNodes);
+        System.out.println(" >>>>> BEFORE" + routeName + "  " + stops.size());
+        stops = stopService.saveAll(stops);
+        stops.forEach(x -> routeStops.add(new RouteStop(route, x)));
+        System.out.println(" >>>>> AFTER " + routeName + "  " + stops.size());
+        routeStopRepository.saveAll(routeStops);
     }
 
 
@@ -93,7 +101,7 @@ public class OverpassDataParser {
             out geom;
      */
     public void getRouteWaysFromJson(String routeName, String filename) throws FileNotFoundException {
-        File file = ResourceUtils.getFile("classpath:routes/" + filename);
+        File file = new File(filename);
 
         Gson gson = new Gson();
         JsonReader jsonReader = new JsonReader(new FileReader(file));

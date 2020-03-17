@@ -14,16 +14,9 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/stops")
 public class StopController {
-    @Autowired
-    private OverpassDataParser overpassDataParser;
 
     @GetMapping
     public String getStops() throws IOException {
-        try {
-            overpassDataParser.getStopsFromJson("t2","t2/t2-stops.json");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
 
         return "Success";
     }

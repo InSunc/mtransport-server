@@ -24,9 +24,9 @@ public class Stop implements Serializable {
     @Column(name = "stop_node_id")
     private long id;
 
+
+    @OneToOne(fetch = FetchType.LAZY)
     @MapsId
-    @JoinColumn(name = "stop_node_id")
-    @OneToOne
     private Node stopNode;
 
     @Column(name = "name")
