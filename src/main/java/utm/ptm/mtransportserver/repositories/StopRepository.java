@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface StopRepository extends JpaRepository<Stop, Long> {
     List<Stop> findAllById(Iterable<Long> stopIds);
+
 }

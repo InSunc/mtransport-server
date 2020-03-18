@@ -19,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -65,31 +66,52 @@ public class OverpassDataParser {
         Route route = routeRepository.save(new Route(routeName));
         List<RouteStop> routeStops = new ArrayList<>();
         List<Stop> stops = new ArrayList<>();
+        List<Node> nodes = new ArrayList<>();
 
         for (ElementDTO element : result.elements) {
             GeometryFactory geometryFactory = new GeometryFactory();
             Point point = geometryFactory.createPoint(new Coordinate(element.lon, element.lat));
-            Node node = nodeService.save(new Node(element.id, point));
+//            Node node = nodeService.save(new Node(element.id, point));
+            Node node = new Node(element.id, point);
+
 
             if (element.tags.public_transport.equals("platform")) {
                 Stop stop = new Stop();
                 stop.setName(element.tags.getName());
                 stop.setStopNode(node);
                 stops.add(stop);
+            } else if (element.tags.public_transport.equals("stop_position")) {
+                nodes.add(node);
             }
         }
 
-        for (Stop stop : stops) {
-            Node nearestNode = nodeService.findNearest(stop.getStopNode());
-            stop.setRouteNode(nearestNode);
-            stop = stopService.save(stop);
+        Collections.sort(stops);
+
+        stops = stopService.saveAll(stops);
+
+        Collections.sort(nodes);
+
+        for (int i = 0; i < stops.size(); i++) {
+            stops.get(i).setRouteNode(nodes.get(i));
         }
 
-        System.out.println(" >>>>> BEFORE" + routeName + "  " + stops.size());
+        nodeService.saveAll(nodes);
         stops = stopService.saveAll(stops);
+
+
         stops.forEach(x -> routeStops.add(new RouteStop(route, x)));
-        System.out.println(" >>>>> AFTER " + routeName + "  " + stops.size());
         routeStopRepository.saveAll(routeStops);
+
+//        for (Stop stop : stops) {
+//            Node nearestNode = nodeService.findNearest(stop.getStopNode());
+//            stop.setRouteNode(nearestNode);
+//            stop = stopService.save(stop);
+//        }
+
+//        System.out.println(" >>>>> BEFORE" + routeName + "  " + stops.size());
+//        stops = stopService.saveAll(stops);
+
+//        System.out.println(" >>>>> AFTER " + routeName + "  " + stops.size());
     }
 
 

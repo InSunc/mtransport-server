@@ -3,14 +3,15 @@ package utm.ptm.mtransportserver.models.db;
 
 import lombok.Data;
 import org.hibernate.annotations.Cascade;
+import org.locationtech.jts.geom.Point;
 
 import javax.persistence.*;
 import java.io.Serializable;
 
 @Data
-@Entity
+@Entity(name = "Stop")
 @Table(name="stops")
-public class Stop implements Serializable {
+public class Stop implements Serializable, Comparable<Stop> {
     /*
      *
      * Relations: Two 1-1 relations to unify a node that's on the way with a node that represents the stop
@@ -21,18 +22,18 @@ public class Stop implements Serializable {
      */
 
     @Id
-    @Column(name = "stop_node_id")
+    @Column
     private long id;
 
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @MapsId
     private Node stopNode;
 
-    @Column(name = "name")
+    @Column
     private String name;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "route_node_id", referencedColumnName = "id")
     private Node routeNode;
 
@@ -64,4 +65,8 @@ public class Stop implements Serializable {
         return false;
     }
 
+    @Override
+    public int compareTo(Stop stop) {
+        return stopNode.compareTo(stop.stopNode);
+    }
 }

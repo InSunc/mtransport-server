@@ -8,6 +8,7 @@ import org.locationtech.jts.geom.Point;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Comparator;
 
 @Setter
 @Getter
@@ -15,8 +16,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Entity
 @Table(name = "nodes")
-@JsonIgnoreProperties(value = {"stop", "stopNode"})
-public class Node implements Serializable {
+@JsonIgnoreProperties(value = {"routeNode", "stopNode"})
+public class Node implements Serializable, Comparable<Node> {
     @Id
     @Column
     private Long id;
@@ -26,11 +27,11 @@ public class Node implements Serializable {
 
 
     @JsonIgnore
-    @OneToOne(mappedBy = "routeNode", targetEntity = Stop.class)
-    private Stop stop;
+    @OneToOne(mappedBy = "routeNode", cascade = CascadeType.ALL)
+    private Stop routeNode;
 
     @JsonIgnore
-    @OneToOne(mappedBy = "stopNode", targetEntity = Stop.class)
+    @OneToOne(mappedBy = "stopNode", cascade = CascadeType.ALL)
     private Stop stopNode;
 
     public Node(long id, Point location) {
@@ -63,5 +64,10 @@ public class Node implements Serializable {
         }
 
         return false;
+    }
+
+    @Override
+    public int compareTo(Node node) {
+        return location.compareTo(node.getLocation());
     }
 }
