@@ -25,14 +25,10 @@ public class Node implements Serializable, Comparable<Node> {
     @Column(columnDefinition = "geometry")
     private Point location;
 
-
     @JsonIgnore
-    @OneToOne(mappedBy = "routeNode", cascade = CascadeType.ALL)
-    private Stop routeNode;
-
-    @JsonIgnore
-    @OneToOne(mappedBy = "stopNode", cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "stopNode", cascade = CascadeType.ALL)
     private Stop stopNode;
+
 
     public Node(long id, Point location) {
         this.id = id;

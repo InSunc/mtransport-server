@@ -11,7 +11,7 @@ import java.io.Serializable;
 @Data
 @Entity(name = "Stop")
 @Table(name="stops")
-public class Stop implements Serializable, Comparable<Stop> {
+public class Stop implements Serializable {
     /*
      *
      * Relations: Two 1-1 relations to unify a node that's on the way with a node that represents the stop
@@ -25,7 +25,6 @@ public class Stop implements Serializable, Comparable<Stop> {
     @Column
     private long id;
 
-
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @MapsId
     private Node stopNode;
@@ -33,16 +32,11 @@ public class Stop implements Serializable, Comparable<Stop> {
     @Column
     private String name;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "route_node_id", referencedColumnName = "id")
-    private Node routeNode;
-
     @Override
     public int hashCode() {
         int hash = super.hashCode();
 
         hash += stopNode.hashCode();
-        hash += routeNode.hashCode();
 
         return hash;
     }
@@ -58,15 +52,10 @@ public class Stop implements Serializable, Comparable<Stop> {
         }
 
         Stop stop = (Stop) obj;
-        if (this.stopNode.equals(stop.stopNode) && this.routeNode.equals(stop.routeNode)) {
+        if (this.stopNode.equals(stop.stopNode)) {
             return true;
         }
 
         return false;
-    }
-
-    @Override
-    public int compareTo(Stop stop) {
-        return stopNode.compareTo(stop.stopNode);
     }
 }

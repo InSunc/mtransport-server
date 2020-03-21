@@ -5,10 +5,12 @@ import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import utm.ptm.mtransportserver.models.db.Route;
+import utm.ptm.mtransportserver.models.db.RouteStop;
 import utm.ptm.mtransportserver.models.db.RouteWay;
 import utm.ptm.mtransportserver.models.db.Way;
 import utm.ptm.mtransportserver.models.dto.WayDTO;
 import utm.ptm.mtransportserver.repositories.RouteRepository;
+import utm.ptm.mtransportserver.repositories.RouteStopRepository;
 import utm.ptm.mtransportserver.repositories.RouteWayRepository;
 
 import java.util.ArrayList;
@@ -18,6 +20,9 @@ import java.util.List;
 public class RouteService {
     @Autowired
     private RouteRepository routeRepository;
+
+    @Autowired
+    private RouteStopRepository routeStopRepository;
 
     @Autowired
     private RouteWayRepository routeWayRepository;
@@ -32,6 +37,10 @@ public class RouteService {
         routeWays.forEach(x -> ways.add(x.getWay()));
 
         return ways;
+    }
+
+    public RouteStop save(RouteStop routeStop) {
+        return routeStopRepository.save(routeStop);
     }
 
 }

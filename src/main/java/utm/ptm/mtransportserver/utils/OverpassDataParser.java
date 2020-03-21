@@ -1,30 +1,44 @@
 package utm.ptm.mtransportserver.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.internal.$Gson$Preconditions;
 import com.google.gson.stream.JsonReader;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
+import org.springframework.web.client.RestTemplate;
+import sun.net.www.http.HttpClient;
 import utm.ptm.mtransportserver.models.db.*;
 import utm.ptm.mtransportserver.repositories.*;
 import utm.ptm.mtransportserver.services.NodeService;
+import utm.ptm.mtransportserver.services.RouteService;
 import utm.ptm.mtransportserver.services.StopService;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.*;
 
+
+/*
+    TODO: implement readRouteDataFromFile function
+ */
 
 @Component
 public class OverpassDataParser {
+    public enum RouteDataType { WAYS, STOPS }
+    public static final String serverURL = "https://www.overpass-api.de/api/interpreter?data=";
+
+    @Autowired
+    private RouteService routeService;
+
     @Autowired
     private NodeService nodeService;
 
@@ -49,11 +63,111 @@ public class OverpassDataParser {
     @Autowired
     private RouteStopRepository routeStopRepository;
 
+    public void getRouteDataFromServer(String routeName, RouteDataType routeData) throws Exception {
+        String urlString = serverURL;
+
+        routeName = routeName.toUpperCase(); // because it's case sensitive
+
+        Route route = routeRepository.save(new Route(routeName));
+
+        routeName += ":"; // end of the name
+
+        switch (routeData) {
+            case WAYS: {
+                urlString += new String("[out:json][timeout:25];%20relation(46.9650,%2028.7763,%2047.0704,%2028.9277)[type=route][name~\""
+                        + routeName
+                        + "\"];%20way(r);%20out%20geom;");
+                break;
+            }
+
+            case STOPS: {
+                urlString += new String("[out:json];relation(46.9650,%2028.7763,%2047.0704,%2028.9277)[name~%22"
+                        + routeName
+                        + "%22];node(r)[public_transport=platform];out%20geom;");
+
+
+                break;
+            }
+
+            default: throw new Exception("Unknown RouteDataType");
+        }
+
+        URL url = new URL(urlString);
+        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+        urlConnection.setRequestMethod("GET");
+        JsonReader jsonReader = new JsonReader(new InputStreamReader(urlConnection.getInputStream()));
+        urlConnection.connect();
+
+        Gson gson = new Gson();
+        OverpassResultDTO result = gson.fromJson(jsonReader, OverpassResultDTO.class);
+
+        switch (routeData) {
+            case WAYS: {
+                parseRouteWays(route, result);
+                break;
+            }
+
+            case STOPS: {
+                parseRouteStops(route, result);
+                break;
+            }
+        }
+    }
+
+    private void parseRouteWays(Route route, OverpassResultDTO result) {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        for (ElementDTO element : result.elements) {
+            Way way = new Way(element.id, element.tags.getName());
+            way = wayRepository.save(way);
+
+            for (int i = 0; i < element.nodes.length; i++) {
+                Point point = geometryFactory.createPoint(new Coordinate(element.geometry[i].lon, element.geometry[i].lat));
+                Node node = new Node(element.nodes[i], point);
+                node = nodeService.save(node);
+
+                WayNode wayNode = new WayNode();
+                wayNode.setWay(way);
+                wayNode.setNode(node);
+
+                wayNodeRepository.save(wayNode);
+            }
+
+            RouteWay routeWay = new RouteWay();
+            routeWay.setRoute(route);
+            routeWay.setWay(way);
+            routeWayRepository.save(routeWay);
+        }
+    }
+
+
+    private void parseRouteStops(Route route, OverpassResultDTO result) {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        for (ElementDTO element : result.elements) {
+            System.out.println(element.tags.getName());
+            Point point = geometryFactory.createPoint(new Coordinate(element.lon, element.lat));
+            Node node = new Node(element.id, point);
+            Stop stop = stopService.findById(element.id).orElse(new Stop());
+
+            stop.setStopNode(node);
+            stop.setName(element.tags.getName());
+            node.setStopNode(stop);
+
+            node = nodeService.save(node);
+            stop = stopService.findById(stop).get();
+
+            RouteStop routeStop = new RouteStop();
+            routeStop.setStop(stop);
+            routeStop.setRoute(route);
+
+            routeService.save(routeStop);
+        }
+    }
+
     /*
         Result of overpass-turbo query:
             [out:json][timeout:25];
             relation(46.9650, 28.7763, 47.0704, 28.9277)[name~"T2:"];
-            node(r);
+            node(r)[public_transport=platform];
             out geom;
      */
     public void getRouteStopsFromJson(String routeName, String filename) throws IOException {
@@ -64,54 +178,19 @@ public class OverpassDataParser {
         OverpassResultDTO result = gson.fromJson(jsonReader, OverpassResultDTO.class);
 
         Route route = routeRepository.save(new Route(routeName));
-        List<RouteStop> routeStops = new ArrayList<>();
-        List<Stop> stops = new ArrayList<>();
-        List<Node> nodes = new ArrayList<>();
+        GeometryFactory geometryFactory = new GeometryFactory();
 
         for (ElementDTO element : result.elements) {
-            GeometryFactory geometryFactory = new GeometryFactory();
             Point point = geometryFactory.createPoint(new Coordinate(element.lon, element.lat));
-//            Node node = nodeService.save(new Node(element.id, point));
+            Stop stop = new Stop();
             Node node = new Node(element.id, point);
 
+            stop.setStopNode(node);
+            stop.setName(element.tags.getName());
+            node.setStopNode(stop);
 
-            if (element.tags.public_transport.equals("platform")) {
-                Stop stop = new Stop();
-                stop.setName(element.tags.getName());
-                stop.setStopNode(node);
-                stops.add(stop);
-            } else if (element.tags.public_transport.equals("stop_position")) {
-                nodes.add(node);
-            }
+            nodeService.save(node);
         }
-
-        Collections.sort(stops);
-
-        stops = stopService.saveAll(stops);
-
-        Collections.sort(nodes);
-
-        for (int i = 0; i < stops.size(); i++) {
-            stops.get(i).setRouteNode(nodes.get(i));
-        }
-
-        nodeService.saveAll(nodes);
-        stops = stopService.saveAll(stops);
-
-
-        stops.forEach(x -> routeStops.add(new RouteStop(route, x)));
-        routeStopRepository.saveAll(routeStops);
-
-//        for (Stop stop : stops) {
-//            Node nearestNode = nodeService.findNearest(stop.getStopNode());
-//            stop.setRouteNode(nearestNode);
-//            stop = stopService.save(stop);
-//        }
-
-//        System.out.println(" >>>>> BEFORE" + routeName + "  " + stops.size());
-//        stops = stopService.saveAll(stops);
-
-//        System.out.println(" >>>>> AFTER " + routeName + "  " + stops.size());
     }
 
 
