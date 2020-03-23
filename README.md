@@ -1,0 +1,1 @@
+[How to add postgis extension ](https://stackoverflow.com/questions/24981784/how-do-i-add-postgis-to-postgresql-pgadmin)

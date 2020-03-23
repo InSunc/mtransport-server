@@ -3,8 +3,11 @@ package utm.ptm.mtransportserver.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import utm.ptm.mtransportserver.models.db.Node;
+import utm.ptm.mtransportserver.models.db.Route;
+import utm.ptm.mtransportserver.models.db.RouteStop;
 import utm.ptm.mtransportserver.models.db.Stop;
 import utm.ptm.mtransportserver.repositories.NodeRepository;
+import utm.ptm.mtransportserver.repositories.RouteStopRepository;
 import utm.ptm.mtransportserver.repositories.StopRepository;
 
 import java.util.ArrayList;
@@ -19,6 +22,9 @@ public class StopService {
     @Autowired
     private NodeRepository nodeRepository;
 
+    @Autowired
+    private RouteStopRepository routeStopRepository;
+
     public Stop save(Stop stop) {
         return stopRepository.save(stop);
     }
@@ -31,16 +37,11 @@ public class StopService {
         return stopRepository.findById(id);
     }
 
-// TODO: check if it makes sense
-    public List<Stop> saveAll(List<Stop> stops) {
-        for (Stop stop : stops) {
-            Node stopNode = stop.getStopNode();
-            stopNode.setStopNode(stop);
-            nodeRepository.save(stopNode);
-        }
+    public List<Stop> getByRoute(Route route) {
+        List<RouteStop> routeStops = routeStopRepository.findAllByRoute(route);
+        List<Stop> stops = new ArrayList<>();
+        routeStops.forEach(routeStop -> stops.add(routeStop.getStop()));
 
         return stops;
     }
-
-
 }

@@ -63,6 +63,13 @@ public class OverpassDataParser {
     @Autowired
     private RouteStopRepository routeStopRepository;
 
+    public void getRouteDataFromServer(String... routeNames) throws Exception {
+        for (String routeName : routeNames) {
+			getRouteDataFromServer(routeName, OverpassDataParser.RouteDataType.STOPS);
+			getRouteDataFromServer(routeName, OverpassDataParser.RouteDataType.WAYS);
+		}
+    }
+
     public void getRouteDataFromServer(String routeName, RouteDataType routeData) throws Exception {
         String urlString = serverURL;
 

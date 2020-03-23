@@ -28,8 +28,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'com.google.code.gson:gson:2.8.6'
 
-//	implementation 'org.hibernate:hibernate-spatial:5.4.12.Final'
-//	implementation 'org.hibernate:hibernate-core:6.0.0.Alpha4'
+	compile "org.springframework.integration:spring-integration-mqtt:5.2.1.RELEASE"
 
 	compile("org.hibernate:hibernate-spatial")
 	compile("org.hibernate:hibernate-core")

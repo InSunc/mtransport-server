@@ -8,6 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface RouteRepository extends JpaRepository<Route, Long> {
-    public Route findByName(String routeName);
-    public Optional<Route> findById(Long id);
+    public Optional<Route> findById(String routeId);
 }

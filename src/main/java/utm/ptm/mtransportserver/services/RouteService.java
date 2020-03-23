@@ -15,6 +15,7 @@ import utm.ptm.mtransportserver.repositories.RouteWayRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class RouteService {
@@ -27,16 +28,12 @@ public class RouteService {
     @Autowired
     private RouteWayRepository routeWayRepository;
 
-    public Route getRoute(String routeName) {
-        return routeRepository.findByName(routeName);
+    public List<Route> getAll() {
+        return routeRepository.findAll();
     }
 
-    public List<Way> getWays(Route route) {
-        List<RouteWay> routeWays = routeWayRepository.findAllByRoute(route);
-        List<Way> ways = new ArrayList<>();
-        routeWays.forEach(x -> ways.add(x.getWay()));
-
-        return ways;
+    public Optional<Route> getRoute(String routeId) {
+        return routeRepository.findById(routeId);
     }
 
     public RouteStop save(RouteStop routeStop) {

@@ -6,13 +6,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Point;
-import utm.ptm.mtransportserver.models.db.Node;
 
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class StopDTO {
-    private String name;
-    private CoordinateDTO location;
+public class CoordinateDTO {
+    private double lat;
+    private double lon;
+
+    public CoordinateDTO(Point point) {
+        this.lat = point.getCoordinate().getY();
+        this.lon = point.getCoordinate().getX();
+    }
 }
