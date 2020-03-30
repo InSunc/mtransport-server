@@ -1,10 +1,10 @@
 package utm.ptm.mtransportserver.services;
 
+import com.jayway.jsonpath.spi.cache.NOOPCache;
+import org.locationtech.jts.geom.Coordinate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import utm.ptm.mtransportserver.models.db.Node;
-import utm.ptm.mtransportserver.models.db.Way;
-import utm.ptm.mtransportserver.models.db.WayNode;
+import utm.ptm.mtransportserver.models.db.*;
 import utm.ptm.mtransportserver.repositories.NodeRepository;
 import utm.ptm.mtransportserver.repositories.WayNodeRepository;
 
@@ -18,6 +18,9 @@ public class NodeService {
 
     @Autowired
     private WayNodeRepository wayNodeRepository;
+
+    @Autowired
+    private WayService wayService;
 
     public List<Node> saveAll(Iterable<Node> nodes) {
         return nodeRepository.saveAll(nodes);
@@ -38,4 +41,27 @@ public class NodeService {
 
         return nodes;
     }
+
+//    public Node[] getMinMaxNodes(Way way) {
+//        Node[] minMax = new Node[2];
+//
+//        List<Node> nodes = getWayNodes(way);
+//
+//        return minMax;
+//    }
+
+//    public List<List<Coordinate>> getDataForSimulation(Transport transport) {
+//        Route route = transport.getRoute();
+//        List<Way> ways = wayService.getRouteWays(route);
+//        List<List<Coordinate>> coordinatesList = new ArrayList<>();
+//
+//        for (Way way : ways) {
+//            List<Node> nodes = getWayNodes(way);
+//            List<Coordinate> coordinates = new ArrayList<>();
+//            coordinatesList.add(coordinates);
+//            nodes.forEach(node -> coordinates.add(node.getLocation().getCoordinate()));
+//        }
+//
+//        return coordinatesList;
+//    }
 }

@@ -6,9 +6,9 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.internal.$Gson$Preconditions;
 import com.google.gson.stream.JsonReader;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.impl.CoordinateArraySequence;
+import org.locationtech.jts.geom.impl.CoordinateArraySequenceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -125,19 +125,35 @@ public class OverpassDataParser {
         GeometryFactory geometryFactory = new GeometryFactory();
         for (ElementDTO element : result.elements) {
             Way way = new Way(element.id, element.tags.getName());
-            way = wayRepository.save(way);
+
+            CoordinateList coordinates = new CoordinateList();
+            List<WayNode> wayNodes = new ArrayList<>();
 
             for (int i = 0; i < element.nodes.length; i++) {
                 Point point = geometryFactory.createPoint(new Coordinate(element.geometry[i].lon, element.geometry[i].lat));
+
+                coordinates.add(point.getCoordinate());
+
                 Node node = new Node(element.nodes[i], point);
                 node = nodeService.save(node);
 
                 WayNode wayNode = new WayNode();
-                wayNode.setWay(way);
-                wayNode.setNode(node);
 
+                wayNode.setNode(node);
+                wayNodes.add(wayNode);
+            }
+
+
+            CoordinateSequence coordinateSequence = new CoordinateArraySequence(coordinates.toCoordinateArray());
+            LineString lineString = new LineString(coordinateSequence, geometryFactory);
+            way.setWayNodes(lineString);
+            way = wayRepository.save(way);
+
+            for (WayNode wayNode : wayNodes) {
+                wayNode.setWay(way);
                 wayNodeRepository.save(wayNode);
             }
+
 
             RouteWay routeWay = new RouteWay();
             routeWay.setRoute(route);

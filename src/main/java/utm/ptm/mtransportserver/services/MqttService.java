@@ -54,6 +54,17 @@ public class MqttService {
         }));
     }
 
+    public void publish(String topic, String data) {
+        topics.add(topic);
+        MqttMessage mqttMessage = new MqttMessage(data.getBytes());
+        System.out.println(mqttMessage.toString());
+        try {
+            mqttClient.publish(topic, data.getBytes(), 0, false);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void unsubsribe(String topic) throws MqttException {
         this.topics.remove(topic);
         this.mqttClient.unsubscribe(topic);

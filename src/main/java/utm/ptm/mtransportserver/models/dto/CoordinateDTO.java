@@ -12,11 +12,16 @@ import org.locationtech.jts.geom.Point;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CoordinateDTO {
-    private double lat;
-    private double lon;
+    private double latitude;
+    private double longitude;
 
     public CoordinateDTO(Point point) {
-        this.lat = point.getCoordinate().getY();
-        this.lon = point.getCoordinate().getX();
+        this.latitude = point.getCoordinate().getY();
+        this.longitude = point.getCoordinate().getX();
+    }
+
+    public CoordinateDTO(Coordinate coordinate) {
+        this.latitude = coordinate.y;
+        this.longitude = coordinate.x;
     }
 }

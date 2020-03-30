@@ -22,7 +22,11 @@ import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import utm.ptm.mtransportserver.models.db.Route;
+import utm.ptm.mtransportserver.models.db.Transport;
+import utm.ptm.mtransportserver.repositories.TransportRepository;
 import utm.ptm.mtransportserver.services.MqttService;
+import utm.ptm.mtransportserver.services.RouteService;
 import utm.ptm.mtransportserver.utils.OverpassDataParser;
 
 @SpringBootApplication
@@ -34,6 +38,12 @@ public class MtransportServerApplication implements CommandLineRunner {
 	@Autowired
 	private MqttService mqttService;
 
+	@Autowired
+	private RouteService routeService;
+
+	@Autowired
+	private TransportRepository transportRepository;
+
 	public static void main(String[] args) {
 		SpringApplication.run(MtransportServerApplication.class, args);
 	}
@@ -41,9 +51,16 @@ public class MtransportServerApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 
-		mqttService.subscibe("topic");
+		mqttService.subscibe("t2");
 
 		overpassDataParser.getRouteDataFromServer("t2", "t8");
+
+//		Route route = routeService.getRoute("T2").get();
+//		Transport transport = new Transport();
+//		transport.setRoute(route);
+//		transport.setId(7690);
+//		transport = transportRepository.save(transport);
+//		transportSimulation.simulate(transport);
 
 		// Parse routes from files
 //		File routesRootDir = ResourceUtils.getFile("classpath:routes/");

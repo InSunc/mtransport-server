@@ -1,5 +1,6 @@
 package utm.ptm.mtransportserver.services;
 
+import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import utm.ptm.mtransportserver.models.db.Node;
@@ -24,6 +25,12 @@ public class StopService {
 
     @Autowired
     private RouteStopRepository routeStopRepository;
+
+
+
+    public Stop getNearest(Point point) {
+        return stopRepository.findNearest(point);
+    }
 
     public Stop save(Stop stop) {
         return stopRepository.save(stop);
