@@ -53,77 +53,7 @@ public class MtransportServerApplication implements CommandLineRunner {
 
 		mqttService.subscibe("t2");
 
-		overpassDataParser.getRouteDataFromServer("t2", "t8");
+		overpassDataParser.getRouteDataFromServer( "t2", "t24", "t10", "t12", "t8");
 
-//		Route route = routeService.getRoute("T2").get();
-//		Transport transport = new Transport();
-//		transport.setRoute(route);
-//		transport.setId(7690);
-//		transport = transportRepository.save(transport);
-//		transportSimulation.simulate(transport);
-
-		// Parse routes from files
-//		File routesRootDir = ResourceUtils.getFile("classpath:routes/");
-//		File[] routesDir = routesRootDir.listFiles();
-//		for (File routeDir : routesDir) {
-//			String routeName = routeDir.getName();
-//			String routeDirPath = routeDir.getPath() + "/";
-////			overpassDataParser.getRouteWaysFromJson(routeName,routeDirPath + routeName + "-ways.json");
-//			overpassDataParser.getRouteStopsFromJson(routeName,routeDirPath + routeName + "-stops.json");
-//		}*
 	}
-
-//	@Bean
-//	public MqttPahoClientFactory mqttClientFactory() {
-//		DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
-//		MqttConnectOptions options = new MqttConnectOptions();
-//		options.setServerURIs(new String[] { "tcp://localhost:1883" });
-////		options.setUserName("username");
-////		options.setPassword("password".toCharArray());
-////		factory.setConnectionOptions(options);
-//		return factory;
-//	}
-
-//	@Bean
-//	@ServiceActivator(inputChannel = "mqttOutboundChannel")
-//	public MessageHandler mqttOutbound() {
-//		MqttPahoMessageHandler messageHandler =
-//				new MqttPahoMessageHandler("testClient", mqttClientFactory());
-//		messageHandler.setAsync(true);
-//		messageHandler.setDefaultTopic("testTopic");
-//		return messageHandler;
-//	}
-//
-//	@Bean
-//	public MessageChannel mqttOutboundChannel() {
-//		return new DirectChannel();
-//	}
-//
-//	@MessagingGateway(defaultRequestChannel = "mqttOutboundChannel")
-//	public interface MyGateway {
-//
-//		void sendToMqtt(String data);
-//
-//	}
-//
-//	// consumer
-//
-//	@Bean
-//	public IntegrationFlow mqttInFlow() {
-//		return IntegrationFlows.from(mqttInbound())
-//				.transform(p -> p + ", received from MQTT")
-//				.get();
-//	}
-//
-//	@Bean
-//	public MessageProducerSupport mqttInbound() {
-//		MqttPahoMessageDrivenChannelAdapter adapter = new MqttPahoMessageDrivenChannelAdapter("siSampleConsumer",
-//				mqttClientFactory(), "testTopic");
-//		adapter.setCompletionTimeout(5000);
-//		adapter.setConverter(new DefaultPahoMessageConverter());
-//		adapter.setQos(1);
-//		return adapter;
-//	}
-
-
 }

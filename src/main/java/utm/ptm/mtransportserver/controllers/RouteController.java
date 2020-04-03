@@ -1,7 +1,10 @@
 package utm.ptm.mtransportserver.controllers;
 
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import utm.ptm.mtransportserver.models.db.*;
 import utm.ptm.mtransportserver.models.dto.CoordinateDTO;
@@ -23,9 +26,6 @@ public class RouteController {
     private RouteService routeService;
 
     @Autowired
-    private NodeService nodeService;
-
-    @Autowired
     private StopService stopService;
 
     @Autowired
@@ -33,81 +33,78 @@ public class RouteController {
 
 
     @GetMapping
-    public Map<String, String> getRoutes() {
-        Map<String, String> routes = new HashMap<>();
-        routeService.getAll().forEach(route -> routes.put(route.getId(), route.getName()));
-
-        return routes;
+    public ResponseEntity<List<RouteDTO>> getRoutes() {
+        List<RouteDTO> routes = new ArrayList<>();
+        routeService.findAll().forEach(route -> routes.add(new RouteDTO(route.getId(), route.getName())));
+        return ResponseEntity.status(HttpStatus.OK).body(routes);
     }
 
-    // TODO: DELETE
-    @GetMapping("/slow/{route}")
-    public RouteDTO getRoute(@PathVariable(name = "route") String routeId) {
 
-        long startTime = System.nanoTime();
-
+    @GetMapping("/{routeId}")
+    public RouteDTO getRoute(@PathVariable(name = "routeId") String routeId) {
         routeId = routeId.toUpperCase();
-        Route route = routeService.getRoute(routeId).get();
-
-        List<Way> ways = wayService.getRouteWays(route);
-
-        List<WayDTO> wayDTOS = new ArrayList<>();
-        for (Way way : ways) {
-            List<CoordinateDTO> points = new ArrayList<>();
-            List<Node> nodes = nodeService.getWayNodes(way);
-            nodes.forEach(node -> points.add(new CoordinateDTO(node.getLocation())));
-            wayDTOS.add(new WayDTO(way.getName(), points));
-        }
-
-        List<Stop> stops = stopService.getByRoute(route);
-        List<StopDTO> stopDTOS = new ArrayList<>();
-        stops.forEach(stop -> stopDTOS.add(
-                new StopDTO(stop.getName(),
-                        new CoordinateDTO(stop.getStopNode().getLocation()))));
-
-        long endTime = System.nanoTime();
-        long duration = (endTime - startTime)/1000000; // ms
-        System.out.println("=============================================================");
-        System.out.println("\t>>>\tgetRoute(" + routeId + ") took " + duration + " ms");
-        System.out.println("=============================================================");
-
-        return new RouteDTO(wayDTOS, stopDTOS);
-    }
-
-    @GetMapping("/{route}")
-    public RouteDTO getRouteFast(@PathVariable(name = "route") String routeId) {
-
-        long startTime = System.nanoTime();
-
-        routeId = routeId.toUpperCase();
-        Route route = routeService.getRoute(routeId).get();
+        Route route = routeService.findById(routeId).get();
 
         List<Way> ways = wayService.getRouteWays(route);
 
         List<WayDTO> wayDTOS = new ArrayList<>();
         for (Way way : ways) {
             List<CoordinateDTO> coordinateDTOS = new ArrayList<>();
-            Coordinate[] coordinates = way.getWayNodes().getCoordinates();
+            Coordinate[] coordinates = way.getPoints().getCoordinates();
             for (Coordinate coordinate : coordinates) {
                 coordinateDTOS.add(new CoordinateDTO(coordinate));
             }
             wayDTOS.add(new WayDTO(way.getName(), coordinateDTOS));
         }
 
-        List<Stop> stops = stopService.getByRoute(route);
+        List<Stop> stops = stopService.findByRoute(route);
         List<StopDTO> stopDTOS = new ArrayList<>();
-        stops.forEach(stop -> stopDTOS.add(
-                new StopDTO(stop.getName(),
-                        new CoordinateDTO(stop.getStopNode().getLocation()))));
-
-        long endTime = System.nanoTime();
-        long duration = (endTime - startTime)/1000000; // ms
-        System.out.println("=============================================================");
-        System.out.println("\t>>>\tgetRouteFast(" + routeId + ") took " + duration + " ms");
-        System.out.println("=============================================================");
+        stops.forEach(stop -> stopDTOS.add(new StopDTO(stop.getName(), new CoordinateDTO(stop.getLocation()))));
 
         return new RouteDTO(wayDTOS, stopDTOS);
     }
+
+
+
+//    @GetMapping("/test")
+//    public RouteDTO test() {
+//        GeometryFactory geometryFactory = new GeometryFactory();
+//        Stop oStop = stopService.findNearest(geometryFactory.createPoint(new Coordinate(28.8254946, 46.9899328)));
+//        Stop dStop = stopService.findNearest(geometryFactory.createPoint(new Coordinate(28.8674648, 47.0584805)));
+//
+//        List<Route> oRoutes = routeService.findAllByStop(oStop);
+//        List<Route> dRoutes = routeService.findAllByStop(dStop);
+//
+//
+////        oRoutes.forEach(oRoute -> stopsToCheck.addAll(stopService.findByRoute(oRoute)));
+//        List<Stop> stopsToCheck = new ArrayList<>();
+//        for (Route oRoute : oRoutes) {
+//            stopsToCheck.addAll(stopService.findByRoute(oRoute));
+//            List<Stop> stopsToDelete = new ArrayList<>();
+//
+//            for (Stop stop : stopsToCheck) {
+//                boolean toDelete = false;
+//                for (Route route : dRoutes) {
+//                    if (!routeService.findAllByStop(stop).contains(route)) {
+//                        stopsToDelete.add(stop);
+//                    }
+//                }
+//            }
+//        }
+//
+//        dRoutes.forEach(dRoute -> stopsToCheck.addAll(stopService.findByRoute(dRoute)));
+//
+//        for (Route oRoute : oRoutes) {
+//            for (Stop stop : stopsToCheck) {
+//                List<Route> routes = routeService.findAllByStop(stop);
+//                if (!routes.contains(oRoute)) {
+//                    stopsToCheck.remove(stop);
+//                }
+//            }
+//        }
+//    }
+
+
 
 
     @Autowired

@@ -1,10 +1,16 @@
 package utm.ptm.mtransportserver.controllers;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateXY;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import utm.ptm.mtransportserver.models.db.Stop;
+import utm.ptm.mtransportserver.models.dto.CoordinateDTO;
+import utm.ptm.mtransportserver.models.dto.StopDTO;
+import utm.ptm.mtransportserver.services.StopService;
 import utm.ptm.mtransportserver.utils.OverpassDataParser;
 
 import java.io.FileNotFoundException;
@@ -15,9 +21,13 @@ import java.io.IOException;
 @RequestMapping("/stops")
 public class StopController {
 
-    @GetMapping
-    public String getStops() throws IOException {
+    @Autowired
+    private StopService stopService;
 
-        return "Success";
+    @PostMapping
+    public ResponseEntity<StopDTO> nearest(@RequestBody CoordinateDTO coordinateDTO) throws IOException {
+        Stop stop = stopService.findNearest(CoordinateDTO.toPoint(coordinateDTO));
+        StopDTO stopDTO = new StopDTO(stop);
+        return ResponseEntity.status(HttpStatus.OK).body(stopDTO);
     }
 }

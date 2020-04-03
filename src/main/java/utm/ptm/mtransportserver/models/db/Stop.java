@@ -1,12 +1,14 @@
 package utm.ptm.mtransportserver.models.db;
 
 
+import com.google.gson.internal.$Gson$Types;
 import lombok.Data;
 import org.hibernate.annotations.Cascade;
 import org.locationtech.jts.geom.Point;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Data
 @Entity(name = "Stop")
@@ -16,37 +18,24 @@ public class Stop implements Serializable {
     @Column
     private long id;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @MapsId
-    private Node stopNode;
-
     @Column
     private String name;
 
+    @Column(columnDefinition = "geometry")
+    private Point location;
+
     @Override
-    public int hashCode() {
-        int hash = super.hashCode();
-
-        hash += stopNode.hashCode();
-
-        return hash;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Stop stop = (Stop) o;
+        return id == stop.id &&
+                Objects.equals(name, stop.name) &&
+                Objects.equals(location, stop.location);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-
-        if (!(obj instanceof Stop)) {
-            return false;
-        }
-
-        Stop stop = (Stop) obj;
-        if (this.stopNode.equals(stop.stopNode)) {
-            return true;
-        }
-
-        return false;
+    public int hashCode() {
+        return Objects.hash(id, name, location);
     }
 }

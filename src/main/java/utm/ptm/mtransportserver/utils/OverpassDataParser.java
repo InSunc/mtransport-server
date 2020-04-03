@@ -1,30 +1,20 @@
 package utm.ptm.mtransportserver.utils;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.internal.$Gson$Preconditions;
 import com.google.gson.stream.JsonReader;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.impl.CoordinateArraySequence;
-import org.locationtech.jts.geom.impl.CoordinateArraySequenceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
-import org.springframework.web.client.RestTemplate;
-import sun.net.www.http.HttpClient;
 import utm.ptm.mtransportserver.models.db.*;
 import utm.ptm.mtransportserver.repositories.*;
-import utm.ptm.mtransportserver.services.NodeService;
 import utm.ptm.mtransportserver.services.RouteService;
 import utm.ptm.mtransportserver.services.StopService;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.*;
 
 
 /*
@@ -40,9 +30,6 @@ public class OverpassDataParser {
     private RouteService routeService;
 
     @Autowired
-    private NodeService nodeService;
-
-    @Autowired
     private RouteRepository routeRepository;
 
     @Autowired
@@ -56,9 +43,6 @@ public class OverpassDataParser {
 
     @Autowired
     private WayRepository wayRepository;
-
-    @Autowired
-    private WayNodeRepository wayNodeRepository;
 
     @Autowired
     private RouteStopRepository routeStopRepository;
@@ -127,33 +111,18 @@ public class OverpassDataParser {
             Way way = new Way(element.id, element.tags.getName());
 
             CoordinateList coordinates = new CoordinateList();
-            List<WayNode> wayNodes = new ArrayList<>();
 
             for (int i = 0; i < element.nodes.length; i++) {
                 Point point = geometryFactory.createPoint(new Coordinate(element.geometry[i].lon, element.geometry[i].lat));
 
                 coordinates.add(point.getCoordinate());
-
-                Node node = new Node(element.nodes[i], point);
-                node = nodeService.save(node);
-
-                WayNode wayNode = new WayNode();
-
-                wayNode.setNode(node);
-                wayNodes.add(wayNode);
             }
 
 
             CoordinateSequence coordinateSequence = new CoordinateArraySequence(coordinates.toCoordinateArray());
             LineString lineString = new LineString(coordinateSequence, geometryFactory);
-            way.setWayNodes(lineString);
+            way.setPoints(lineString);
             way = wayRepository.save(way);
-
-            for (WayNode wayNode : wayNodes) {
-                wayNode.setWay(way);
-                wayNodeRepository.save(wayNode);
-            }
-
 
             RouteWay routeWay = new RouteWay();
             routeWay.setRoute(route);
@@ -168,15 +137,11 @@ public class OverpassDataParser {
         for (ElementDTO element : result.elements) {
             System.out.println(element.tags.getName());
             Point point = geometryFactory.createPoint(new Coordinate(element.lon, element.lat));
-            Node node = new Node(element.id, point);
             Stop stop = stopService.findById(element.id).orElse(new Stop());
-
-            stop.setStopNode(node);
+            stop.setId(element.id);
+            stop.setLocation(point);
             stop.setName(element.tags.getName());
-            node.setStopNode(stop);
-
-            node = nodeService.save(node);
-            stop = stopService.findById(stop).get();
+            stop = stopService.save(stop);
 
             RouteStop routeStop = new RouteStop();
             routeStop.setStop(stop);
@@ -193,28 +158,28 @@ public class OverpassDataParser {
             node(r)[public_transport=platform];
             out geom;
      */
-    public void getRouteStopsFromJson(String routeName, String filename) throws IOException {
-        File file = new File(filename);
-
-        Gson gson = new Gson();
-        JsonReader jsonReader = new JsonReader(new FileReader(file));
-        OverpassResultDTO result = gson.fromJson(jsonReader, OverpassResultDTO.class);
-
-        Route route = routeRepository.save(new Route(routeName));
-        GeometryFactory geometryFactory = new GeometryFactory();
-
-        for (ElementDTO element : result.elements) {
-            Point point = geometryFactory.createPoint(new Coordinate(element.lon, element.lat));
-            Stop stop = new Stop();
-            Node node = new Node(element.id, point);
-
-            stop.setStopNode(node);
-            stop.setName(element.tags.getName());
-            node.setStopNode(stop);
-
-            nodeService.save(node);
-        }
-    }
+//    public void getRouteStopsFromJson(String routeName, String filename) throws IOException {
+//        File file = new File(filename);
+//
+//        Gson gson = new Gson();
+//        JsonReader jsonReader = new JsonReader(new FileReader(file));
+//        OverpassResultDTO result = gson.fromJson(jsonReader, OverpassResultDTO.class);
+//
+//        Route route = routeRepository.save(new Route(routeName));
+//        GeometryFactory geometryFactory = new GeometryFactory();
+//
+//        for (ElementDTO element : result.elements) {
+//            Point point = geometryFactory.createPoint(new Coordinate(element.lon, element.lat));
+//            Stop stop = new Stop();
+//            Node node = new Node(element.id, point);
+//
+//            stop.setStopNode(node);
+//            stop.setName(element.tags.getName());
+//            node.setStopNode(stop);
+//
+//            nodeService.save(node);
+//        }
+//    }
 
 
     /*
@@ -224,38 +189,34 @@ public class OverpassDataParser {
             way(r);
             out geom;
      */
-    public void getRouteWaysFromJson(String routeName, String filename) throws FileNotFoundException {
-        File file = new File(filename);
-
-        Gson gson = new Gson();
-        JsonReader jsonReader = new JsonReader(new FileReader(file));
-        OverpassResultDTO result = gson.fromJson(jsonReader, OverpassResultDTO.class);
-
-        Route route = routeRepository.save(new Route(routeName));
-
-        for (ElementDTO element : result.elements) {
-            Way way = new Way(element.id, element.tags.getName());
-            way = wayRepository.save(way);
-
-            for (int i = 0; i < element.nodes.length; i++) {
-                GeometryFactory geometryFactory = new GeometryFactory();
-                Point point = geometryFactory.createPoint(new Coordinate(element.geometry[i].lon, element.geometry[i].lat));
-                Node node = new Node(element.nodes[i], point);
-                node = nodeService.save(node);
-
-                WayNode wayNode = new WayNode();
-                wayNode.setWay(way);
-                wayNode.setNode(node);
-
-                wayNodeRepository.save(wayNode);
-            }
-
-            RouteWay routeWay = new RouteWay();
-            routeWay.setRoute(route);
-            routeWay.setWay(way);
-            routeWayRepository.save(routeWay);
-        }
-    }
+//    public void getRouteWaysFromJson(String routeName, String filename) throws FileNotFoundException {
+//        File file = new File(filename);
+//
+//        Gson gson = new Gson();
+//        JsonReader jsonReader = new JsonReader(new FileReader(file));
+//        OverpassResultDTO result = gson.fromJson(jsonReader, OverpassResultDTO.class);
+//
+//        Route route = routeRepository.save(new Route(routeName));
+//
+//        for (ElementDTO element : result.elements) {
+//            Way way = new Way(element.id, element.tags.getName());
+//            way = wayRepository.save(way);
+//
+//            for (int i = 0; i < element.nodes.length; i++) {
+//                GeometryFactory geometryFactory = new GeometryFactory();
+//                Point point = geometryFactory.createPoint(new Coordinate(element.geometry[i].lon, element.geometry[i].lat));
+//                Node node = new Node(element.nodes[i], point);
+//                node = nodeService.save(node);
+//
+//                wayNodeRepository.save(wayNode);
+//            }
+//
+//            RouteWay routeWay = new RouteWay();
+//            routeWay.setRoute(route);
+//            routeWay.setWay(way);
+//            routeWayRepository.save(routeWay);
+//        }
+//    }
 }
 
 

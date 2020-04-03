@@ -13,11 +13,21 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.List;
 
-@Setter
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class RouteDTO {
-    List<WayDTO> ways;
-    List<StopDTO> stops;
+    public String id;
+    public String name;
+    public List<WayDTO> ways;
+    public List<StopDTO> stops;
+
+    public RouteDTO(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public RouteDTO(List<WayDTO> ways, List<StopDTO> stops) {
+        this.ways = ways;
+        this.stops = stops;
+    }
 }

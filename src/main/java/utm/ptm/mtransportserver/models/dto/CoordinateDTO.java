@@ -5,15 +5,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 
-@Setter
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class CoordinateDTO {
-    private double latitude;
-    private double longitude;
+    public double latitude;
+    public double longitude;
 
     public CoordinateDTO(Point point) {
         this.latitude = point.getCoordinate().getY();
@@ -23,5 +22,11 @@ public class CoordinateDTO {
     public CoordinateDTO(Coordinate coordinate) {
         this.latitude = coordinate.y;
         this.longitude = coordinate.x;
+    }
+
+    public static Point toPoint(CoordinateDTO coordinateDTO) {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Coordinate coordinate = new Coordinate(coordinateDTO.longitude, coordinateDTO.latitude);
+        return geometryFactory.createPoint(coordinate);
     }
 }

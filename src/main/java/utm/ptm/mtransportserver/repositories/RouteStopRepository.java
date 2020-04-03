@@ -10,5 +10,6 @@ import java.util.List;
 
 @Repository
 public interface RouteStopRepository extends JpaRepository<RouteStop, Long> {
-    public List<RouteStop> findAllByRoute(Route route);
+    List<RouteStop> findAllByRoute(Route route);
+    List<RouteStop> findAllByStop(Stop stop);
 }

@@ -7,8 +7,7 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Setter
-@Getter
+
 @AllArgsConstructor
 @NoArgsConstructor
 public class WayDTO {
