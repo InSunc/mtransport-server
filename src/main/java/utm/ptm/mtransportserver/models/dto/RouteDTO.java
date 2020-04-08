@@ -21,6 +21,11 @@ public class RouteDTO {
     public List<WayDTO> ways;
     public List<StopDTO> stops;
 
+    public RouteDTO(Route route) {
+        this.id = route.getId();
+        this.name = route.getName();
+    }
+
     public RouteDTO(String id, String name) {
         this.id = id;
         this.name = name;

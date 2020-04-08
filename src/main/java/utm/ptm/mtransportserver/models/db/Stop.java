@@ -1,9 +1,7 @@
 package utm.ptm.mtransportserver.models.db;
 
 
-import com.google.gson.internal.$Gson$Types;
 import lombok.Data;
-import org.hibernate.annotations.Cascade;
 import org.locationtech.jts.geom.Point;
 
 import javax.persistence.*;
@@ -24,6 +22,13 @@ public class Stop implements Serializable {
     @Column(columnDefinition = "geometry")
     private Point location;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn
+    private Way way;
+
+    @Column
+    private int side;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -37,5 +42,24 @@ public class Stop implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(id, name, location);
+    }
+
+    public int computeSide() {
+        Point startPoint;
+        Point endPoint;
+        if (way.getPointsOrder() >= 0) {
+            startPoint = way.getPoints().getStartPoint();
+            endPoint = way.getPoints().getEndPoint();
+        } else {
+            endPoint = way.getPoints().getStartPoint();
+            startPoint = way.getPoints().getEndPoint();
+        }
+        double norm = (endPoint.getX() - startPoint.getX())*(startPoint.getY() - location.getY())
+                - (startPoint.getX() - location.getX())*(endPoint.getY() - startPoint.getY());
+
+        if (norm > 0) return 1;
+        if (norm < 0) return -1;
+
+        return 0;
     }
 }

@@ -23,37 +23,64 @@ import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 import utm.ptm.mtransportserver.models.db.Route;
+import utm.ptm.mtransportserver.models.db.Ticket;
 import utm.ptm.mtransportserver.models.db.Transport;
 import utm.ptm.mtransportserver.repositories.TransportRepository;
 import utm.ptm.mtransportserver.services.MqttService;
 import utm.ptm.mtransportserver.services.RouteService;
+import utm.ptm.mtransportserver.services.TransportService;
 import utm.ptm.mtransportserver.utils.OverpassDataParser;
+
+import java.time.LocalDateTime;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalUnit;
 
 @SpringBootApplication
 public class MtransportServerApplication implements CommandLineRunner {
 
-	@Autowired
-	private OverpassDataParser overpassDataParser;
+    @Autowired
+    private OverpassDataParser overpassDataParser;
+
+    @Autowired
+    private MqttService mqttService;
+
+    @Autowired
+    private RouteService routeService;
+
+    @Autowired
+    private TransportRepository transportRepository;
+
 
 	@Autowired
-	private MqttService mqttService;
+	private TransportService transportService;
 
-	@Autowired
-	private RouteService routeService;
+    public static void main(String[] args) {
+        SpringApplication.run(MtransportServerApplication.class, args);
+    }
 
-	@Autowired
-	private TransportRepository transportRepository;
 
-	public static void main(String[] args) {
-		SpringApplication.run(MtransportServerApplication.class, args);
-	}
+    @Override
+    public void run(String... args) throws Exception {
 
-	@Override
-	public void run(String... args) throws Exception {
+        mqttService.subscibe("raw/t2");
 
-		mqttService.subscibe("t2");
+        Transport transport = new Transport();
+        transport.setId(57481574);
+        transport = transportService.save(transport);
+        Ticket ticket = new Ticket();;
+        for (int i = 0; i < 3; i++) {
+            ticket = new Ticket();
+            ticket.setTransport(transport);
+            ticket.setCreationTime(LocalDateTime.now().minusDays(3));
+            transportService.save(ticket);
+        }
+		ticket.setCreationTime(LocalDateTime.now().minusDays(2));
+		ticket.setExpirationTime(LocalDateTime.now());
+        transportService.save(ticket);
 
-		overpassDataParser.getRouteDataFromServer( "t2", "t24", "t10", "t12", "t8");
+        overpassDataParser.getRouteDataFromServer("t2", "t24", "t10", "t12", "t8");
 
-	}
+        System.out.println("====================== O V E R P A S S    D O N E =================================");
+
+    }
 }

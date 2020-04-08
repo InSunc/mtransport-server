@@ -36,8 +36,12 @@ public interface WayRepository extends JpaRepository<Way, Long> {
             "join ways on pt.edge = ways.id;\n", nativeQuery = true)
     List<Way> findWay();
 
-    @Query(value = "with rways as (select * from ways join route_ways on ways.id = route_ways.id and route_ways.route_id = ?1)\n" +
+    @Query(value = "with rways as (select * from ways join route_ways on ways.id = route_ways.way_id and route_ways.route_id = ?1)\n" +
             "select * from rways order by rways.points <-> ?2 limit 1;", nativeQuery = true)
     Optional<Way> findNearest(String routeId, Point stopLocation);
 
+
+    @Query(value = "select * from ways order by ways.points <-> ?1 limit 1;", nativeQuery = true)
+    Optional<Way> findNearest(Point stopLocation);
+    Optional<Way> findById(Long id);
 }

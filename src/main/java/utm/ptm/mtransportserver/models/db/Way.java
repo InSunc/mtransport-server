@@ -5,9 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.Point;
 
 import javax.persistence.*;
 import java.util.Objects;
@@ -29,24 +28,40 @@ public class Way {
     @Column(columnDefinition = "geometry")
     private LineString points;
 
+    @Column
+    private boolean bidirectional;
+
 
     public Way(Long id, String name) {
         this.id = id;
         this.name = name;
     };
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Way)) return false;
         Way way = (Way) o;
-        return Objects.equals(id, way.id) &&
-                Objects.equals(name, way.name) &&
-                Objects.equals(points, way.points);
+        return bidirectional == way.isBidirectional() &&
+                id.equals(way.getId()) &&
+                Objects.equals(name, way.getName()) &&
+                Objects.equals(points, way.getPoints());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, points);
+        return Objects.hash(id, name, points, bidirectional);
+    }
+
+    public int getPointsOrder() {
+        Coordinate[] coordinates = points.getCoordinates();
+        int lastIndex = coordinates.length - 1;
+        if (coordinates[0].y < coordinates[lastIndex].y) return 1;
+        if (coordinates[0].y > coordinates[lastIndex].y) return -1;
+        if (coordinates[0].x < coordinates[lastIndex].x) return 1;
+        if (coordinates[0].x > coordinates[lastIndex].x) return -1;
+
+        return 0;
     }
 }

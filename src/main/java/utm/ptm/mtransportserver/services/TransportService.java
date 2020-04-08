@@ -1,11 +1,13 @@
 package utm.ptm.mtransportserver.services;
 
 import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.util.LineStringExtracter;
+import org.locationtech.jts.operation.linemerge.LineSequencer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import utm.ptm.mtransportserver.models.db.Route;
-import utm.ptm.mtransportserver.models.db.Transport;
-import utm.ptm.mtransportserver.models.db.Way;
+import utm.ptm.mtransportserver.models.db.*;
+import utm.ptm.mtransportserver.repositories.TicketRepository;
+import utm.ptm.mtransportserver.repositories.TransportArrivalRepository;
 import utm.ptm.mtransportserver.repositories.TransportRepository;
 
 import java.util.*;
@@ -24,6 +26,12 @@ public class TransportService {
 
     @Autowired
     private MqttService mqttService;
+
+    @Autowired
+    private TransportArrivalRepository transportArrivalRepository;
+
+    @Autowired
+    private TicketRepository ticketRepository;
 
 
     private void sort(List<Coordinate> coordinates) {
@@ -51,6 +59,29 @@ public class TransportService {
                 Collections.swap(coordinates, i + 1, closest);
             }
         }
+    }
+
+    public int getNrOfProple(long transportId) {
+        List<Ticket> tickets = ticketRepository.getNumberOfPeople(transportId);
+        return tickets.size();
+    }
+
+    public Ticket save(Ticket ticket) {
+        return ticketRepository.save(ticket);
+    }
+
+    public Transport save(Transport transport) {
+        return transportRepository.save(transport);
+    }
+
+
+    public Transport findById(Long id) {
+        return transportRepository.findById(id).get();
+    }
+
+
+    public TransportArrival save(TransportArrival transportArrival) {
+        return transportArrivalRepository.save(transportArrival);
     }
 
     private List<List<Coordinate>> sortR(List<List<Coordinate>> rawWays) {
@@ -104,12 +135,14 @@ public class TransportService {
 
         List<Way> ways = wayService.getRouteWays(route);
 
-        List<List<Coordinate>> rawWays = new ArrayList<>();
-        ways.forEach(way -> rawWays.add(Arrays.asList(way.getPoints().getCoordinates())));
-        List<List<Coordinate>> sorted = sortR(rawWays);
+        LineSequencer lineSequencer = new LineSequencer();
+        for (Way way : ways) {
+            lineSequencer.add(way.getPoints());
+        }
 
-        for (List<Coordinate> rawWay : sorted) {
-            for (Coordinate coordinate : rawWay) {
+
+        if (lineSequencer.isSequenceable()) {
+            for (Coordinate coordinate : lineSequencer.getSequencedLineStrings().getCoordinates()) {
                 String data = "{\"board\": " + transportId
                         + ", \"latitude\": " + coordinate.y
                         + ", \"longitude\": " + coordinate.x
@@ -120,26 +153,45 @@ public class TransportService {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
             }
-        }
+        } else {
+//        List<List<Coordinate>> rawWays = new ArrayList<>();
+//        ways.forEach(way -> rawWays.add(Arrays.asList(way.getPoints().getCoordinates())));
+//        List<List<Coordinate>> sorted = sortR(rawWays);
 
-//        List<Coordinate> coordinates = new ArrayList<>();
-//        ways.forEach(way -> coordinates.addAll(Arrays.asList(way.getWayNodes().getCoordinates())));
-//        sort(coordinates);
-
-//        for (Coordinate coordinate : coordinates) {
-//            String data = "{\"board\": " + transportId
-//                    + ", \"latitude\": " + coordinate.y
-//                    + ", \"longitude\": " + coordinate.x
-//                    + "}";
-//            mqttService.publish(routeId, data);
-//            try {
-//                Thread.sleep(100);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
+//        for (List<Coordinate> rawWay : sorted) {
+//            for (Coordinate coordinate : rawWay) {
+//                String data = "{\"board\": " + transportId
+//                        + ", \"latitude\": " + coordinate.y
+//                        + ", \"longitude\": " + coordinate.x
+//                        + "}";
+//                mqttService.publish(routeId, data);
+//                try {
+//                    Thread.sleep(100);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//
 //            }
 //        }
+
+            List<Coordinate> coordinates = new ArrayList<>();
+            ways.forEach(way -> coordinates.addAll(Arrays.asList(way.getPoints().getCoordinates())));
+            sort(coordinates);
+
+            for (Coordinate coordinate : coordinates) {
+                String data = "{\"board\": " + transportId
+                        + ", \"latitude\": " + coordinate.y
+                        + ", \"longitude\": " + coordinate.x
+                        + "}";
+                mqttService.publish(routeId, data);
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
     }
 }

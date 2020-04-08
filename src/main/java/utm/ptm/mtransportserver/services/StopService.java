@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import utm.ptm.mtransportserver.models.db.Route;
 import utm.ptm.mtransportserver.models.db.RouteStop;
 import utm.ptm.mtransportserver.models.db.Stop;
+import utm.ptm.mtransportserver.models.db.Way;
 import utm.ptm.mtransportserver.models.dto.CoordinateDTO;
 import utm.ptm.mtransportserver.models.dto.StopDTO;
 import utm.ptm.mtransportserver.repositories.RouteStopRepository;
@@ -30,6 +31,20 @@ public class StopService {
         } else {
             return stop;
         }
+    }
+
+    public Stop findNearest(Point point, int side) {
+        Stop stop = stopRepository.findNearest(point, side).orElse(null);
+        if (stop == null) {
+            throw new NullPointerException();
+        } else {
+            return stop;
+        }
+    }
+
+
+    public Optional<Stop> findByDistance(Point point, int maxDistance) {
+        return stopRepository.findByDistance(point, maxDistance);
     }
 
     public Stop save(Stop stop) {

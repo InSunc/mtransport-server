@@ -49,8 +49,8 @@ public class OverpassDataParser {
 
     public void getRouteDataFromServer(String... routeNames) throws Exception {
         for (String routeName : routeNames) {
+            getRouteDataFromServer(routeName, OverpassDataParser.RouteDataType.WAYS);
 			getRouteDataFromServer(routeName, OverpassDataParser.RouteDataType.STOPS);
-			getRouteDataFromServer(routeName, OverpassDataParser.RouteDataType.WAYS);
 		}
     }
 
@@ -118,6 +118,12 @@ public class OverpassDataParser {
                 coordinates.add(point.getCoordinate());
             }
 
+            String oneway = element.tags.oneway;
+            boolean isBidir = false;
+            if (oneway == null || oneway.equals("no")) {
+                isBidir = true;
+            }
+            way.setBidirectional(isBidir);
 
             CoordinateSequence coordinateSequence = new CoordinateArraySequence(coordinates.toCoordinateArray());
             LineString lineString = new LineString(coordinateSequence, geometryFactory);
@@ -135,12 +141,32 @@ public class OverpassDataParser {
     private void parseRouteStops(Route route, OverpassResultDTO result) {
         GeometryFactory geometryFactory = new GeometryFactory();
         for (ElementDTO element : result.elements) {
-            System.out.println(element.tags.getName());
+//            System.out.println(element.tags.getName());
             Point point = geometryFactory.createPoint(new Coordinate(element.lon, element.lat));
             Stop stop = stopService.findById(element.id).orElse(new Stop());
             stop.setId(element.id);
+            Way way = wayRepository.findNearest(point).orElse(null);
+            stop.setWay(way);
             stop.setLocation(point);
             stop.setName(element.tags.getName());
+            stop = stopService.save(stop);
+
+            int side = 0;
+            Point startPoint;
+            Point endPoint;
+            if (way.getPointsOrder() >= 0) {
+                startPoint = way.getPoints().getStartPoint();
+                endPoint = way.getPoints().getEndPoint();
+            } else {
+                endPoint = way.getPoints().getStartPoint();
+                startPoint = way.getPoints().getEndPoint();
+            }
+            double norm = (endPoint.getX() - startPoint.getX())*(startPoint.getY() - stop.getLocation().getY())
+                    - (startPoint.getX() - stop.getLocation().getX())*(endPoint.getY() - startPoint.getY());
+            if (norm > 0) side = 1;
+            if (norm < 0) side = -1;
+
+            stop.setSide(side);
             stop = stopService.save(stop);
 
             RouteStop routeStop = new RouteStop();
@@ -246,6 +272,8 @@ class TagsDTO {
     @SerializedName("name:ru")
     String nameRU;
     String public_transport;
+    String oneway;
+    String noexit;
 
     String getName() {
         if (name != null)

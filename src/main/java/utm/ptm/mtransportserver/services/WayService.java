@@ -11,9 +11,7 @@ import utm.ptm.mtransportserver.repositories.RouteRepository;
 import utm.ptm.mtransportserver.repositories.RouteWayRepository;
 import utm.ptm.mtransportserver.repositories.WayRepository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class WayService {
@@ -38,6 +36,33 @@ public class WayService {
         return ways;
     }
 
+
+    public Map<Route, List<Way>> getRouteWays(Iterable<Route> routes) {
+        List<RouteWay> routeWays = routeWayRepository.findAllByRoutes(routes);
+        Map<Route, List<Way>> routeWayMap = new HashMap<>();
+
+        for (Route route : routes) {
+            List<Way> ways = new ArrayList<>();
+            for (RouteWay routeWay : routeWays) {
+                if (routeWay.getRoute().equals(route)) {
+                    ways.add(routeWay.getWay());
+                }
+            }
+
+            routeWayMap.put(route, ways);
+        }
+
+
+        return routeWayMap;
+    }
+
+    public Way findById(Long id) {
+        return wayRepository.findById(id).get();
+    }
+
+    public Optional<Way> findNearest(Point stopLocation) {
+        return wayRepository.findNearest(stopLocation);
+    }
 
     public Optional<Way> findNearest(String routeId, Point stopLocation) {
         return wayRepository.findNearest(routeId, stopLocation);
