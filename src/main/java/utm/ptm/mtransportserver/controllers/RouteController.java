@@ -34,9 +34,23 @@ public class RouteController {
 
     @GetMapping
     public ResponseEntity<List<RouteDTO>> getRoutes() {
-        List<RouteDTO> routes = new ArrayList<>();
-        routeService.findAll().forEach(route -> routes.add(new RouteDTO(route.getId(), route.getName())));
-        return ResponseEntity.status(HttpStatus.OK).body(routes);
+        List<RouteDTO> routeDTOS = new ArrayList<>();
+
+        List<Route> routes = routeService.findAll();
+        for (Route route : routes) {
+            List<Way> ways = wayService.getRouteWays(route);
+
+            List<Stop> stops = stopService.findByRoute(route);
+            List<StopDTO> stopDTOS = new ArrayList<>();
+            stops.forEach(stop -> stopDTOS.add(new StopDTO(stop)));
+            RouteDTO routeDTO = new RouteDTO(null, stopDTOS);
+            routeDTO.id = route.getId();
+            routeDTO.name = routeDTO.stops.get(0).name + " - " + routeDTO.stops.get(routeDTO.stops.size() - 1).name;
+            routeDTOS.add(routeDTO);
+        }
+
+//        routeService.findAll().forEach(route -> routes.add(new RouteDTO(route.getId(), route.getName())));
+        return ResponseEntity.status(HttpStatus.OK).body(routeDTOS);
     }
 
 
@@ -48,14 +62,7 @@ public class RouteController {
         List<Way> ways = wayService.getRouteWays(route);
 
         List<WayDTO> wayDTOS = new ArrayList<>();
-        for (Way way : ways) {
-            List<CoordinateDTO> coordinateDTOS = new ArrayList<>();
-            Coordinate[] coordinates = way.getPoints().getCoordinates();
-            for (Coordinate coordinate : coordinates) {
-                coordinateDTOS.add(new CoordinateDTO(coordinate));
-            }
-            wayDTOS.add(new WayDTO(way.getName(), coordinateDTOS));
-        }
+        ways.forEach(way -> wayDTOS.add(new WayDTO(way)));
 
         List<Stop> stops = stopService.findByRoute(route);
         List<StopDTO> stopDTOS = new ArrayList<>();
@@ -103,19 +110,4 @@ public class RouteController {
 //            }
 //        }
 //    }
-
-
-
-
-    @Autowired
-    private TransportService transportService;
-    @Autowired
-    private MqttService mqttService;
-
-    @GetMapping("/simulate/{route}")
-    public String simulateRoute(@PathVariable(name = "route") String routeId) {
-        transportService.simulate(routeId);
-        return "Simulation started";
-    }
-
 }

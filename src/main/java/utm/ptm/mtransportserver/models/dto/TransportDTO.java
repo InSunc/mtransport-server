@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransportDTO {
-    public long id;
+    public long board;
     public double latitude;
     public double longitude;
     public byte loadLevel;

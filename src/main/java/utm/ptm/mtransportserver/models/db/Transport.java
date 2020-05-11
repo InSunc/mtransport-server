@@ -1,9 +1,6 @@
 package utm.ptm.mtransportserver.models.db;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 
@@ -16,14 +13,13 @@ import javax.persistence.*;
 public class Transport {
     @Id
     @Column
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn
     private Route route;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn
-    private TransportType transportType;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn
+//    private TransportType transportType;
 }

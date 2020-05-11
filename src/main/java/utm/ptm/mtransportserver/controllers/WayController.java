@@ -1,12 +1,13 @@
 package utm.ptm.mtransportserver.controllers;
 
+import com.google.gson.Gson;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.locationtech.jts.geom.Coordinate;
+import org.postgresql.shaded.com.ongres.scram.common.gssapi.Gs2Attributes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import sun.awt.image.ImageWatched;
 import utm.ptm.mtransportserver.models.db.Route;
 import utm.ptm.mtransportserver.models.db.RouteWay;
@@ -35,6 +36,24 @@ public class WayController {
 
     @Autowired
     private RouteService routeService;
+
+
+    @GetMapping("/{routeId}")
+    public ResponseEntity<String> get(@PathVariable(name = "routeId") String routeId) {
+        List<WayDTO> wayDTOS = new ArrayList<>();
+
+        Route route = routeService.findById(routeId).get();
+        List<Way> ways = wayService.getRouteWays(route);
+
+        ways.forEach(way -> wayDTOS.add(new WayDTO(way)));
+
+        System.out.println(" >>> ways size " + ways.size());
+
+        Gson gson = new Gson();
+        String response = gson.toJson(wayDTOS.toArray(), WayDTO[].class);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 
     @GetMapping
     public RouteDTO get() {

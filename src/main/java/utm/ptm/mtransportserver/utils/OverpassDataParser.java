@@ -59,7 +59,8 @@ public class OverpassDataParser {
 
         routeName = routeName.toUpperCase(); // because it's case sensitive
 
-        Route route = routeRepository.save(new Route(routeName));
+        Route route = new Route(routeName, 2f);
+        route = routeRepository.save(route);
 
         routeName += ":"; // end of the name
 
@@ -152,19 +153,27 @@ public class OverpassDataParser {
             stop = stopService.save(stop);
 
             int side = 0;
-            Point startPoint;
-            Point endPoint;
-            if (way.getPointsOrder() >= 0) {
+            Point startPoint = null;
+            Point endPoint = null;
+            if (way.getPointsOrder() == 1) {
                 startPoint = way.getPoints().getStartPoint();
                 endPoint = way.getPoints().getEndPoint();
-            } else {
+            } else if (way.getPointsOrder() == -1) {
                 endPoint = way.getPoints().getStartPoint();
                 startPoint = way.getPoints().getEndPoint();
+            } else if (way.getPointsOrder() == 0) {
+                System.err.println(" !!! IN OVERPASS PARSER");
+                startPoint = way.getPoints().getStartPoint();
+                endPoint = way.getPoints().getEndPoint();
             }
-            double norm = (endPoint.getX() - startPoint.getX())*(startPoint.getY() - stop.getLocation().getY())
-                    - (startPoint.getX() - stop.getLocation().getX())*(endPoint.getY() - startPoint.getY());
-            if (norm > 0) side = 1;
-            if (norm < 0) side = -1;
+            double det = (endPoint.getX() - startPoint.getX())*(stop.getLocation().getY() - startPoint.getY())
+                    - (stop.getLocation().getX() - startPoint.getX())*(endPoint.getY() - startPoint.getY());
+
+            if (det > 0) side = 1;
+            if (det < 0) side = -1;
+            if (det == 0) side = 0;
+
+            if (way.isBidirectional()) side *= -1;
 
             stop.setSide(side);
             stop = stopService.save(stop);

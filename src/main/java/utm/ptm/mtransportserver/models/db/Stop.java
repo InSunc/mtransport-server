@@ -2,6 +2,7 @@ package utm.ptm.mtransportserver.models.db;
 
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.locationtech.jts.geom.Point;
 
 import javax.persistence.*;
@@ -9,6 +10,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Data
+@NoArgsConstructor
 @Entity(name = "Stop")
 @Table(name="stops")
 public class Stop implements Serializable {

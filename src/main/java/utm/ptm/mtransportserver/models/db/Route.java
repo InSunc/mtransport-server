@@ -20,8 +20,12 @@ public class Route {
     @Column
     private String name;
 
-    public Route(String id) {
+    @Column
+    private float price;
+
+    public Route(String id, float price) {
         this.id = id;
+        this.price = price;
     }
 
     @Override

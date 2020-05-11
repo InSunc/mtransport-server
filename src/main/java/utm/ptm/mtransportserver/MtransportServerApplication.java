@@ -62,23 +62,28 @@ public class MtransportServerApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        mqttService.subscibe("raw/t2");
-
-        Transport transport = new Transport();
-        transport.setId(57481574);
-        transport = transportService.save(transport);
-        Ticket ticket = new Ticket();;
-        for (int i = 0; i < 3; i++) {
-            ticket = new Ticket();
-            ticket.setTransport(transport);
-            ticket.setCreationTime(LocalDateTime.now().minusDays(3));
-            transportService.save(ticket);
-        }
-		ticket.setCreationTime(LocalDateTime.now().minusDays(2));
-		ticket.setExpirationTime(LocalDateTime.now());
-        transportService.save(ticket);
+        mqttService.subscibe("raw/T2");
+        mqttService.subscibe("raw/T8");
+        mqttService.subscibe("raw/T10");
 
         overpassDataParser.getRouteDataFromServer("t2", "t24", "t10", "t12", "t8");
+
+        Transport transport = new Transport();
+        transport.setId(100);
+        Route route = routeService.findById("T2").get();
+        transport.setRoute(route);
+        transportService.save(transport);
+//        Ticket ticket = new Ticket();;
+//        for (int i = 0; i < 3; i++) {
+//            ticket = new Ticket();
+//            ticket.setTransport(transport);
+//            ticket.setCreationTime(LocalDateTime.now().minusDays(3));
+//            transportService.save(ticket);
+//        }
+//		ticket.setCreationTime(LocalDateTime.now().minusDays(2));
+//		ticket.setExpirationTime(LocalDateTime.now());
+//        transportService.save(ticket);
+
 
         System.out.println("====================== O V E R P A S S    D O N E =================================");
 

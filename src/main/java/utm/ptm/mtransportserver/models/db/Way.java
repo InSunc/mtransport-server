@@ -7,8 +7,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.Point;
 
 import javax.persistence.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 @Setter
@@ -57,11 +61,13 @@ public class Way {
     public int getPointsOrder() {
         Coordinate[] coordinates = points.getCoordinates();
         int lastIndex = coordinates.length - 1;
-        if (coordinates[0].y < coordinates[lastIndex].y) return 1;
-        if (coordinates[0].y > coordinates[lastIndex].y) return -1;
+
         if (coordinates[0].x < coordinates[lastIndex].x) return 1;
         if (coordinates[0].x > coordinates[lastIndex].x) return -1;
+        if (coordinates[0].y < coordinates[lastIndex].y) return 1;
+        if (coordinates[0].y > coordinates[lastIndex].y) return -1;
 
+        System.err.println(" !!! WAY ORDER == 0");
         return 0;
     }
 }
