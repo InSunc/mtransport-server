@@ -63,11 +63,11 @@ public class SimulationService {
     }
 
     public void simulateTransport(String routeId) {
-        final int SLEEP_TIME = 1000;
+        final int SLEEP_TIME = 500;
         Route route = routeService.findById(routeId).get();
         Transport transport = new Transport();
         transport.setRoute(route);
-        int transportId = new Random().nextInt();
+        int transportId = new Random().nextInt() & Integer.MAX_VALUE;
         transport.setId(transportId);
         transport = transportService.save(transport);
 

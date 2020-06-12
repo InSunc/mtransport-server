@@ -22,6 +22,10 @@ public class Ticket {
     @JoinColumn
     private Transport transport;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn
+    private Stop stop;
+
     @Column
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
