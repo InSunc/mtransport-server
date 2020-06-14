@@ -18,6 +18,9 @@ import utm.ptm.mtransportserver.models.dto.TripDTO;
 import utm.ptm.mtransportserver.services.StopService;
 import utm.ptm.mtransportserver.services.TripService;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,9 +35,8 @@ public class TripController {
     @Autowired
     private StopService stopService;
 
-
     @PostMapping
-    public ResponseEntity<String> findTrips(@RequestBody CoordinateDTO[] originAndDestination) {
+    public ResponseEntity<String> findTrips(@RequestBody CoordinateDTO[] originAndDestination) throws IOException {
 
         Stop originStop = stopService.findNearest(CoordinateDTO.toPoint(originAndDestination[0]));
         Stop destinationStop = stopService.findNearest(CoordinateDTO.toPoint(originAndDestination[1]), originStop.getSide());
@@ -42,27 +44,25 @@ public class TripController {
         System.out.println(originStop.getId() + ": " + originStop.getName() + " : " + originStop.getSide() + " -> " + originStop.getWay().getPointsOrder() + ": " + originStop.getWay().getId());
         System.out.println(destinationStop.getId() + ": " + destinationStop.getName() + " : " + destinationStop.getSide() + " -> " + destinationStop.getWay().getPointsOrder() + ": " + destinationStop.getWay().getId());
 
-        HashMap<LinkedHashSet<Route>, LinkedHashSet<Stop>> results = tripService.findTripStops(originStop, destinationStop);
-//        Map.Entry<LinkedHashSet<Route>, LinkedHashSet<Stop>> result = tripService.getBestResult(results);
-
-//        LinkedHashSet<Way> ways = tripService.findTripWays(new ArrayList<>(result.getKey()), new ArrayList<>(result.getValue()));
-
-        ConcurrentHashMap<LinkedHashSet<Route>, LinkedHashSet<Way>> tripWays = tripService.findTripWays(results);
-
         List<TripDTO> tripDTOS = new ArrayList<>();
-        for (Map.Entry<LinkedHashSet<Route>, LinkedHashSet<Stop>> entry : results.entrySet()) {
-            float time = tripService.getTripTime(tripWays.get(entry.getKey()), originStop.getSide());
-            System.out.println(" > Trip time = " + time);
-            float cost = tripService.getTripCost(entry.getKey());
-            tripDTOS.add(new TripDTO(entry.getKey(), entry.getValue(), tripWays.get(entry.getKey()), time, cost));
-        }
 
+        if (tripService.tripWasAnalysed(originStop, destinationStop)) {
+            tripDTOS = tripService.readTripFromFile(originStop, destinationStop);
+        } else {
+            HashMap<LinkedHashSet<Route>, LinkedHashSet<Stop>> results = tripService.findTripStops(originStop, destinationStop);
+            ConcurrentHashMap<LinkedHashSet<Route>, LinkedHashSet<Way>> tripWays = tripService.findTripWays(results);
+            for (Map.Entry<LinkedHashSet<Route>, LinkedHashSet<Stop>> entry : results.entrySet()) {
+                float time = tripService.getTripTime(tripWays.get(entry.getKey()), originStop.getSide());
+                System.out.println(" > Trip time = " + time);
+                float cost = tripService.getTripCost(entry.getKey());
+                tripDTOS.add(new TripDTO(entry.getKey(), entry.getValue(), tripWays.get(entry.getKey()), time, cost));
+            }
+
+            tripService.saveTripToFile(originStop, destinationStop, tripDTOS);
+        }
 
         Gson gson = new Gson();
         String jsonString = gson.toJson(tripDTOS.toArray(), TripDTO[].class);
-//        String jsonString = gson.toJson(tripDTO, TripDTO.class);
         return ResponseEntity.status(HttpStatus.OK).body(jsonString);
     }
-
-
 }

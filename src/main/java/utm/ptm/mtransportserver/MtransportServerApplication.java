@@ -31,6 +31,8 @@ import utm.ptm.mtransportserver.services.RouteService;
 import utm.ptm.mtransportserver.services.TransportService;
 import utm.ptm.mtransportserver.utils.OverpassDataParser;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
@@ -66,24 +68,13 @@ public class MtransportServerApplication implements CommandLineRunner {
         mqttService.subscibe("raw/T8");
         mqttService.subscibe("raw/T10");
 
-        overpassDataParser.getRouteDataFromServer("t2", "t24", "t10", "t12", "t8");
+//        overpassDataParser.getRouteDataFromServer("t2", "t24", "t10", "t12", "t8");
 
-        Transport transport = new Transport();
-        transport.setId(100);
-        Route route = routeService.findById("T2").get();
-        transport.setRoute(route);
-        transportService.save(transport);
-//        Ticket ticket = new Ticket();;
-//        for (int i = 0; i < 3; i++) {
-//            ticket = new Ticket();
-//            ticket.setTransport(transport);
-//            ticket.setCreationTime(LocalDateTime.now().minusDays(3));
-//            transportService.save(ticket);
-//        }
-//		ticket.setCreationTime(LocalDateTime.now().minusDays(2));
-//		ticket.setExpirationTime(LocalDateTime.now());
-//        transportService.save(ticket);
-
+//        Transport transport = new Transport();
+//        transport.setId(100);
+//        Route route = routeService.findById("T2").get();
+//        transport.setRoute(route);
+//        transportService.save(transport);
 
         System.out.println("====================== O V E R P A S S    D O N E =================================");
 

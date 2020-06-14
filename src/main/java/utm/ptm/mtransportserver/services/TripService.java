@@ -1,6 +1,10 @@
 package utm.ptm.mtransportserver.services;
 
 
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import jdk.jfr.events.FileReadEvent;
 import org.locationtech.jts.geom.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -8,15 +12,25 @@ import org.springframework.stereotype.Service;
 import utm.ptm.mtransportserver.models.db.Route;
 import utm.ptm.mtransportserver.models.db.Stop;
 import utm.ptm.mtransportserver.models.db.Way;
+import utm.ptm.mtransportserver.models.dto.CoordinateDTO;
+import utm.ptm.mtransportserver.models.dto.StopDTO;
+import utm.ptm.mtransportserver.models.dto.TripDTO;
+import utm.ptm.mtransportserver.models.dto.WayDTO;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.jar.JarEntry;
 import java.util.stream.Collectors;
 
 @Service
 public class TripService {
+    private final String TRIPS_PATH = "./src/main/resources/trips/";
+
     @Autowired
     private RouteService routeService;
 
@@ -281,6 +295,33 @@ public class TripService {
         }
 
         return routeStops;
+    }
+
+
+    public boolean tripWasAnalysed(Stop origin, Stop destination) {
+        String filename = origin.getId() + "-" + destination.getId() + ".json";
+
+        File tripsFolder = new File(TRIPS_PATH);
+        List<String> files = Arrays.asList(Objects.requireNonNull(tripsFolder.list()));
+
+        return files.contains(filename);
+    }
+
+    public List<TripDTO> readTripFromFile(Stop origin, Stop destination) throws IOException {
+        String filename = origin.getId() + "-" + destination.getId() + ".json";
+        String tripJson = new String(Files.readAllBytes(Paths.get(TRIPS_PATH + filename)));
+        Gson gson = new Gson();
+        TripDTO[] trips = gson.fromJson(tripJson, TripDTO[].class);
+        return Arrays.asList(trips);
+    }
+
+    public void saveTripToFile(Stop origin, Stop destionation, List<TripDTO> tripDTOS) throws IOException {
+        String filename = origin.getId() + "-" + destionation.getId() + ".json";
+        File file = new File(TRIPS_PATH + filename);
+        FileWriter fileWriter = new FileWriter(file);
+        Gson gson = new Gson();
+        fileWriter.write(gson.toJson(tripDTOS));
+        fileWriter.close();
     }
 
 

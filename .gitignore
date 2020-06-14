@@ -1,11 +1,12 @@
 HELP.md
 .gradle
-build/** */
+build/
 *.class
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**
 !**/src/test/**
 bin/
+src/main/resources/trips/
 ### STS ###
 .apt_generated
 .classpath

@@ -16,8 +16,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WayDTO {
-    String name;
-    List<CoordinateDTO> points;
+    public String name;
+    public List<CoordinateDTO> points;
 
     public WayDTO(Way way) {
         name = way.getName();
